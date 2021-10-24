@@ -13,6 +13,7 @@
 #include "e_malloc.h"
 #include "d_disjointset.h"
 #include "a_avl.h"
+#include "m_matrix.h"
 
 void TestDisjointSet (void)
 {
@@ -30,10 +31,30 @@ void TestAVL (void)
     E_Dump();
 }
 
+void TestMatrix (void)
+{
+    /* test reducing matrix to row reduced echelon form */
+    double matrix[] = { 0, 1, 0,
+                        0, 1, 0,
+                        1, 1, 1 };
+
+    double* rref = M_ToRREF(matrix, 3, 3, 3);
+    M_Dump(rref, 3, 3);
+
+    /* test inverting the matrix */
+    double invertthis[] = { 3, -1, 0,
+                            1, 3, 0,
+                            0, 0, 1 };
+
+    double* inverted = M_Invert(invertthis, 3);
+    M_Dump(inverted, 3, 3);
+}
+
 int main (int argc, const char * argv[])
 {
     E_Init(1);
     TestAVL();
+    TestMatrix();
     E_Dump();
     E_Destroy();
     return 0;
