@@ -54,3 +54,6 @@ dkms.conf
 # IDEs
 algos.xcodeproj*
 .vscode
+
+# Output
+algs
