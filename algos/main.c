@@ -10,6 +10,8 @@
 
 #include <stdio.h>
 
+#include "e_malloc.h"
+
 int main (int argc, const char * argv[])
 {
     // TODO: make stuff
