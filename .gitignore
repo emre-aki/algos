@@ -51,5 +51,6 @@ Module.symvers
 Mkfile.old
 dkms.conf
 
-# XCode
+# IDEs
 algos.xcodeproj*
+.vscode
