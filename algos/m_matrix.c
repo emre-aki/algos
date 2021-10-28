@@ -189,7 +189,7 @@ void M_Dump (double* matrix, int rows, int cols)
 {
     printf("Matrix @%p:\n\n", matrix);
 
-    if (!matrix) return;
+    if (!matrix) { printf("NULL\n"); return; }
 
     for (int r = 0; r < rows; ++r)
     {
