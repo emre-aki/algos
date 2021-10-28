@@ -100,7 +100,7 @@ static int AVL_Balance_ (AVL_Node* p_node, AVL_Node* p_parent, AVL_Tree* p_tree)
         return depthright; // return the depth after balancing
     }
     /* unbalanced due to the left subtree */
-    if (balancefactor > 1)
+    else if (balancefactor > 1)
     {
         /* balance subtree (double rotation) */
         if (p_node->p_left->p_right != NULL)
