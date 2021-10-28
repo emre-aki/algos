@@ -5,7 +5,7 @@
  *  Created by Emre Akı on 2021-05-10.
  *
  *  SYNOPSIS:
- *      A module for a self-balancing binary tree data structure known as AVL
+ *      A module for the self-balancing binary tree data structure known as AVL
  *      trees.
  *
  *      Balancing is performed at each insertion to the tree to keep the depth
@@ -73,8 +73,9 @@ static int AVL_Balance_ (AVL_Node* p_node, AVL_Node* p_parent, AVL_Tree* p_tree)
         depthleft = AVL_Balance_(p_node->p_left, p_node, p_tree);
     if (p_node->p_right)
         depthright = AVL_Balance_(p_node->p_right, p_node, p_tree);
-    // calculate the balancing factor for the current subtree, and perform
-    // rotations based on the orientation of the subtree if needed
+    /* calculate the balancing factor for the current subtree, and perform
+     * rotations based on the orientation of the subtree if needed
+     */
     int balancefactor = depthleft - depthright;
     /* unbalanced due to the right subtree */
     if (balancefactor < -1)
