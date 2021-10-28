@@ -15,6 +15,7 @@
 
 #include "e_malloc.h"
 #include "m_matrix.h"
+#include "u_math.h"
 
 static double M_Get (double* matrix, int cols, int r, int c)
 {
@@ -30,6 +31,53 @@ static double* M_SafeError (double* matrix)
 {
     E_Free(matrix);
     return NULL;
+}
+
+double* M_Transpose (double* matrix, int rows, int cols)
+{
+    // allocate new memory for the transposed matrix
+    double* transposed = E_Malloc(sizeof(double) * rows * cols, M_Transpose);
+    /* transpose matrix */
+    for (int r = 0; r < rows; ++r)
+        for (int c = 0; c < cols; ++c)
+            M_Set(transposed, M_Get(matrix, cols, r, c), rows, c, r);
+    return transposed;
+}
+
+double M_Dot (double* vector0, double* vector1, int dimensions)
+{
+    double sum = 0;
+    for (int d = 0; d < dimensions; ++d)
+        sum += (*(vector0 + d)) * (*(vector1 + d));
+    return sum;
+}
+
+double* M_Mult (double* left, int leftrows, int leftcols,
+                double* right, int rightrows, int rightcols)
+{
+    if (!left || !right || leftcols != rightrows)
+    {
+        printf("M_Mult: Cannot multiply matrices.\n");
+        return NULL;
+    }
+    // allocate new memory for the resulting matrix
+    double* result = E_Malloc(sizeof(double) * leftrows * rightcols, M_Mult);
+    // transpose the right matrix to leverage CPU cache-hits
+    double* transposed = M_Transpose(right, rightrows, rightcols);
+    /* multiply matrices */
+    for (int r = 0; r < leftrows; ++r)
+    {
+        int leftoffset = r * leftcols;
+        for (int c = 0; c < rightcols; ++c)
+        {
+            int rightoffset = c * rightrows;
+            M_Set(result,
+                  M_Dot(left + leftoffset, transposed + rightoffset, leftcols),
+                  rightcols, r, c);
+        }
+    }
+    E_Free(transposed);
+    return result;
 }
 
 double* M_ToRREF (double* matrix, int rows, int cols, int delimiter)
@@ -127,6 +175,15 @@ double* M_Invert (double* matrix, int rows)
     return inverted;
 }
 
+int M_Equals (double* matrix0, double* matrix1, int rows, int cols)
+{
+    int equals = 1;
+    for (int r = 0; r < rows && equals; ++r)
+        for (int c = 0; c < cols && equals; ++c)
+            equals = U_ToFixed(M_Get(matrix0, cols, r, c), 5) ==
+                     U_ToFixed(M_Get(matrix1, cols, r, c), 5);
+    return equals;
+}
 
 void M_Dump (double* matrix, int rows, int cols)
 {
