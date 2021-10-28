@@ -26,6 +26,12 @@ static void M_Set (double* matrix, double value, int cols, int r, int c)
     *(matrix + (cols * r + c)) = value;
 }
 
+static double* M_SafeError (double* matrix)
+{
+    E_Free(matrix);
+    return NULL;
+}
+
 double* M_ToRREF (double* matrix, int rows, int cols, int delimiter)
 {
     int sizebytes = sizeof(double) * rows * cols;
@@ -37,14 +43,16 @@ double* M_ToRREF (double* matrix, int rows, int cols, int delimiter)
     int cpivot = 0;
     for (int r = 0; r < rows; ++r)
     {
-        if (cpivot == delimiter) return NULL;
+        if (cpivot == delimiter) return M_SafeError(rref);
         int rpivot = r;
         /* find pivot */
         while(!M_Get(rref, cols, rpivot, cpivot))
         {
-            // reached the end of the matrix, and there is a zero-column.
-            // this means the matrix is non-invertible, so return immediately
-            if (rpivot == rows - 1 && cpivot == delimiter - 1) return NULL;
+            /* reached the end of the matrix, and there is a zero-column.
+             * this means the matrix is non-invertible, so return immediately
+             */
+            if (rpivot == rows - 1 && cpivot == delimiter - 1)
+                return M_SafeError(rref);
             // the column has no non-zero entries, advance to the next one
             else if (rpivot == rows - 1) { ++cpivot; rpivot = r; }
             // look for a pivot in the row below in the current column
