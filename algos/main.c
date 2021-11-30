@@ -14,6 +14,7 @@
 #include "d_disjointset.h"
 #include "a_avl.h"
 #include "m_matrix.h"
+#include "m_fixed.h"
 
 void TestDisjointSet (void)
 {
@@ -66,12 +67,42 @@ void TestMatrixRREF (void)
     E_Dump();
 }
 
-int main (int argc, const char * argv[])
+void TestFixedPoint (void)
+{
+    double da = 3, db = -0.8; fixed_t fa = M_ToFixed(da), fb = M_ToFixed(db);
+    double ftoda = M_ToDouble(fa), ftodb = M_ToDouble(fb);
+    /* test fixed-point multiplication */
+    double doublemul = da * db, fixedmul = M_ToDouble(M_Mul(fa, fb));
+    printf("(double) %.1f * (double) %.1f = %.20f\n", da, db, doublemul);
+    printf("(fixed_t) %.1f * (fixed_t) %.1f = %.20f\n", ftoda, ftodb, fixedmul);
+    double errorpercent = (fixedmul - doublemul) / doublemul;
+    errorpercent *= errorpercent > 0 ? 100 : -100;
+    printf("Rounding error = %.3f%%\n", errorpercent);
+    /* test fixed-point division */
+    double doublediv = da / db, fixeddiv = M_ToDouble(M_Div(fa, fb));
+    printf("(double) %.1f / (double) %.1f = %.20f\n", da, db, doublediv);
+    printf("(fixed_t) %.1f / (fixed_t) %.1f = %.20f\n", ftoda, ftodb, fixeddiv);
+    errorpercent = (fixeddiv - doublediv) / doublediv;
+    errorpercent *= errorpercent > 0 ? 100 : -100;
+    printf("Rounding error = %.3f%%\n", errorpercent);
+    /* test various fixed point operations */
+    printf("floor(4.3) = %d\n", (int) M_ToDouble(M_Floor(M_ToFixed(4.3))));
+    printf("floor(-4.3) = %d\n", (int) M_ToDouble(M_Floor(M_ToFixed(-4.3))));
+    printf("ceil(4.3) = %d\n", (int) M_ToDouble(M_Ceil(M_ToFixed(4.3))));
+    printf("ceil(-4.3) = %d\n", (int) M_ToDouble(M_Ceil(M_ToFixed(-4.3))));
+    printf("round(4.3) = %d\n", (int) M_ToDouble(M_Round(M_ToFixed(4.3))));
+    printf("round(-4.3) = %d\n", (int) M_ToDouble(M_Round(M_ToFixed(-4.3))));
+    printf("round(4.5) = %d\n", (int) M_ToDouble(M_Round(M_ToFixed(4.5))));
+    printf("round(-4.5) = %d\n", (int) M_ToDouble(M_Round(M_ToFixed(-4.5))));
+}
+
+int main (int argc, const char** argv)
 {
     E_Init(1);
     TestAVL();
     TestMatrixInversion();
     TestMatrixRREF();
     E_Destroy();
+    TestFixedPoint();
     return 0;
 }
