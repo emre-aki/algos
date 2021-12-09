@@ -18,7 +18,7 @@ const int PRECISION = 16;
 const double SCALE = 1 << PRECISION;
 const fixed_t SIGN_MASK = 0x80000000;
 const fixed_t INT_MASK = 0xffff0000;
-const fixed_t HALF = SCALE * 0.5;
+const fixed_t HALF = (fixed_t) SCALE >> 1;
 
 fixed_t M_ToFixed (double num)
 {
