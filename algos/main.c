@@ -57,12 +57,13 @@ void TestMatrixInversion (void)
 void TestMatrixRREF (void)
 {
     /* test reducing matrix to row reduced echelon form */
-    double matrix[] = { 0, 1, 0,
-                        0, 1, 0,
-                        1, 1, 1 };
+    double matrix[] = { 1, 0, 0, 1, 1, 0, 0, 0,
+                        0, 1, 0, 2, 0, 1, 0, 0,
+                        0, 0, 1, 3, 0, 0, 1, 0,
+                        0, 0, 0, 1, 0, 0, 0, 1 };
 
-    double* rref = M_ToRREF(matrix, 3, 3, 3);
-    M_Dump(rref, 3, 3);
+    double* rref = M_ToRREF(matrix, 4, 8, 4);
+    M_Dump(rref, 4, 8);
     if (rref) E_Free(rref);
     E_Dump();
 }
