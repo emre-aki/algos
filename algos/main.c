@@ -15,6 +15,7 @@
 #include "a_avl.h"
 #include "m_matrix.h"
 #include "m_fixed.h"
+#include "m_lookat.h"
 
 void TestDisjointSet (void)
 {
@@ -97,12 +98,25 @@ void TestFixedPoint (void)
     printf("round(-4.5) = %d\n", (int) M_ToDouble(M_Round(M_ToFixed(-4.5))));
 }
 
+void TestLookAt (void)
+{
+    vec3_t eye = { 0, 0, 0 };
+    vec3_t center = { 0, 0.7071067811865476, 0.7071067811865476 };
+    vec3_t up = { 0, 1, 0 };
+    mat4_t* lookat = M_LookAt(&eye, &center, &up);
+    M_Debug(lookat);
+    E_Dump();
+    E_Free(lookat);
+    E_Dump();
+}
+
 int main (int argc, const char** argv)
 {
     E_Init(1);
     TestAVL();
     TestMatrixInversion();
     TestMatrixRREF();
+    TestLookAt();
     E_Destroy();
     TestFixedPoint();
     return 0;
