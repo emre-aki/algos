@@ -96,6 +96,8 @@ void TestFixedPoint (void)
     printf("round(-4.3) = %d\n", (int) M_ToDouble(M_Round(M_ToFixed(-4.3))));
     printf("round(4.5) = %d\n", (int) M_ToDouble(M_Round(M_ToFixed(4.5))));
     printf("round(-4.5) = %d\n", (int) M_ToDouble(M_Round(M_ToFixed(-4.5))));
+    printf("abs(-4.314) = %f\n", M_ToDouble(M_Abs(M_ToFixed(-4.314))));
+    printf("abs(4.314) = %f\n", M_ToDouble(M_Abs(M_ToFixed(4.314))));
 }
 
 void TestLookAt (void)

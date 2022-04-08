@@ -68,3 +68,10 @@ fixed_t M_Round (fixed_t num)
     if (sign > 0) return pasthalfway >= 0 ? M_Ceil(num) : M_Floor(num);
     return pasthalfway > 0 ? M_Ceil(num) : M_Floor(num);
 }
+
+fixed_t M_Abs (fixed_t num)
+{
+    int sign = M_Sign(num);
+    if (sign >= 0) return num;
+    return ~num + 1;
+}

@@ -24,6 +24,7 @@
 #define m_fixed_h_M_Floor M_Floor
 #define m_fixed_h_M_Ceil M_Ceil
 #define m_fixed_h_M_Round M_Round
+#define m_fixed_h_M_Abs M_Abs
 
 typedef int fixed_t;
 typedef long long int64_t;
@@ -36,5 +37,6 @@ int M_Sign (fixed_t num);
 fixed_t M_Floor (fixed_t num);
 fixed_t M_Ceil (fixed_t num);
 fixed_t M_Round (fixed_t num);
+fixed_t M_Abs (fixed_t num);
 
 #endif
