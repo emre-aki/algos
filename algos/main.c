@@ -16,6 +16,8 @@
 #include "m_matrix.h"
 #include "m_fixed.h"
 #include "m_lookat.h"
+#include "q_queue.h"
+#include "z_zigzagtree.h"
 
 void TestDisjointSet (void)
 {
@@ -112,6 +114,72 @@ void TestLookAt (void)
     E_Dump();
 }
 
+void TestQueue (void)
+{
+    queue_t* queue = Q_Init();
+    node_t* node0 = (node_t*) E_Malloc(sizeof(node_t), TestQueue);
+    node0->data = 42;
+    node_t* node1 = (node_t*) E_Malloc(sizeof(node_t), TestQueue);
+    node1->data = 43;
+    node_t* node2 = (node_t*) E_Malloc(sizeof(node_t), TestQueue);
+    node2->data = 44;
+    E_Dump();
+    Q_Push(queue, node0);
+    Q_Push(queue, node1);
+    Q_Push(queue, node2);
+    E_Dump();
+    Q_Print(queue);
+    Q_Pop(queue);
+    Q_Print(queue);
+    Q_Pop(queue);
+    Q_Print(queue);
+    Q_Pop(queue);
+    Q_Print(queue);
+    E_Dump();
+    node_t* node3 = (node_t*) E_Malloc(sizeof(node_t), TestQueue);
+    node3->data = 45;
+    Q_Push(queue, node3);
+    Q_Print(queue);
+    E_Dump();
+    Q_Destroy(queue);
+    E_Dump();
+    E_Free(node0);
+    E_Free(node1);
+    E_Free(node2);
+    E_Free(node3);
+}
+
+void TestTree (void)
+{
+    E_Dump();
+    tree_t* tree = Z_Init();
+    Z_Insert(tree, 1);
+    Z_Insert(tree, 2);
+    Z_Insert(tree, 3);
+    Z_Print(tree);
+    E_Dump();
+    Z_Insert(tree, 7);
+    Z_Insert(tree, 6);
+    Z_Insert(tree, 5);
+    Z_Insert(tree, 4);
+    printf("size = %d\n", Z_Size(tree));
+    Z_Print(tree);
+    E_Dump();
+    Z_Insert(tree, 8);
+    Z_Insert(tree, 9);
+    Z_Insert(tree, 10);
+    Z_Insert(tree, 11);
+    Z_Insert(tree, 12);
+    Z_Insert(tree, 13);
+    Z_Print(tree);
+    E_Dump();
+    Z_PrintZigZag(tree);
+    Z_Destroy(tree);
+    E_Dump();
+    Z_Print(tree);
+    Z_PrintZigZag(tree);
+}
+
 int main (int argc, const char** argv)
 {
     E_Init(1);
@@ -119,7 +187,10 @@ int main (int argc, const char** argv)
     TestMatrixInversion();
     TestMatrixRREF();
     TestLookAt();
-    E_Destroy();
     TestFixedPoint();
+    TestQueue();
+    TestTree();
+    E_Dump();
+    E_Destroy();
     return 0;
 }

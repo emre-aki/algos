@@ -12,6 +12,7 @@
 
 #include "e_malloc.h"
 #include "q_queue.h"
+#include "z_zigzagtree.h" // NOTE: needed only in `Q_Print`
 
 static qnode_t* Q_InitNode (void* data)
 {
@@ -67,4 +68,21 @@ void Q_Destroy (queue_t* queue)
 {
     while(!Q_IsEmpty(queue)) Q_Pop(queue);
     E_Free(queue);
+}
+
+void Q_Print (queue_t* queue)
+{
+    if (Q_IsEmpty(queue))
+    {
+        printf("[]\n");
+        return;
+    }
+    printf("[");
+    qnode_t* current = queue->head;
+    while (current != queue->tail)
+    {
+        printf("%d, ", ((node_t*) current->data)->data);
+        current = current->next;
+    }
+    printf("%d]\n", ((node_t*) current->data)->data);
 }
