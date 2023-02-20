@@ -18,6 +18,7 @@
 #include "m_lookat.h"
 #include "q_queue.h"
 #include "z_zigzagtree.h"
+#include "s_subsets.h"
 
 void TestDisjointSet (void)
 {
@@ -180,6 +181,13 @@ void TestTree (void)
     Z_PrintZigZag(tree);
 }
 
+void TestSubsets ()
+{
+    int nNums = 5;
+    int nums[5] = { 1, 2, 3, 4, 5 };
+    S_TestSubsets(nums, nNums);
+}
+
 int main (int argc, const char** argv)
 {
     E_Init(1);
@@ -191,6 +199,7 @@ int main (int argc, const char** argv)
     TestQueue();
     TestTree();
     E_Dump();
+    TestSubsets();
     E_Destroy();
     return 0;
 }
