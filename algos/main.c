@@ -19,6 +19,7 @@
 #include "q_queue.h"
 #include "z_zigzagtree.h"
 #include "s_subsets.h"
+#include "s_substring.h"
 
 void TestDisjointSet (void)
 {
@@ -188,6 +189,14 @@ void TestSubsets ()
     S_TestSubsets(nums, nNums);
 }
 
+void TestSubstrings ()
+{
+    S_LongestSubstringWithEvenVowels("eleetminicoworoep");
+    S_LongestSubstringWithEvenVowels("Hello, world!");
+    S_LongestSubstringWithNonRepeatingChars("eleetminicoworoep");
+    S_LongestSubstringWithNonRepeatingChars("Hello, world!");
+}
+
 int main (int argc, const char** argv)
 {
     E_Init(1);
@@ -201,5 +210,6 @@ int main (int argc, const char** argv)
     E_Dump();
     TestSubsets();
     E_Destroy();
+    TestSubstrings();
     return 0;
 }
