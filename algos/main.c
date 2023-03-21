@@ -20,6 +20,7 @@
 #include "z_zigzagtree.h"
 #include "s_subsets.h"
 #include "s_substring.h"
+#include "h_heap.h"
 
 void TestDisjointSet (void)
 {
@@ -197,6 +198,16 @@ void TestSubstrings ()
     S_LongestSubstringWithNonRepeatingChars("Hello, world!");
 }
 
+void TestHeap ()
+{
+    int size = 5;
+    HeapNode raw[] = { { 0, 0 }, { 1, 1 }, { 2, 2 }, { 3, 1 }, { 4, 2 } };
+    HeapNode heap[size];
+    H_Heapify(raw, heap, size);
+    H_PrintHeap(heap, size);
+    while (size > 0) printf("Popped %d\n", H_HeapPop(heap, &size).data);
+}
+
 int main (int argc, const char** argv)
 {
     E_Init(1);
@@ -211,5 +222,6 @@ int main (int argc, const char** argv)
     TestSubsets();
     E_Destroy();
     TestSubstrings();
+    TestHeap();
     return 0;
 }
