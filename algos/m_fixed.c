@@ -14,11 +14,11 @@
 
 #include "m_fixed.h"
 
-const int PRECISION = 16;
-const double SCALE = 1 << PRECISION;
-const fixed_t SIGN_MASK = 0x80000000;
-const fixed_t INT_MASK = 0xffff0000;
-const fixed_t HALF = (fixed_t) SCALE >> 1;
+static const unsigned short PRECISION = 16;
+static const unsigned int SCALE = 1 << PRECISION;
+static const fixed_t SIGN_MASK = 0x80000000;
+static const fixed_t INT_MASK = 0xffff0000;
+static const fixed_t HALF = (fixed_t) SCALE >> 1;
 
 fixed_t M_ToFixed (double num)
 {
@@ -27,7 +27,7 @@ fixed_t M_ToFixed (double num)
 
 double M_ToDouble (fixed_t num)
 {
-    return num / SCALE;
+    return (double) num / SCALE;
 }
 
 fixed_t M_Mul (fixed_t a, fixed_t b)
