@@ -46,8 +46,7 @@ fixed_t M_Div (fixed_t numer, fixed_t denom)
 
 int M_Sign (fixed_t num)
 {
-    if (!num) return 0;
-    return num & SIGN_MASK ? -1 : 1;
+    return (num >> 31) + (num > 0);
 }
 
 fixed_t M_Floor (fixed_t num)
@@ -71,7 +70,6 @@ fixed_t M_Round (fixed_t num)
 
 fixed_t M_Abs (fixed_t num)
 {
-    int sign = M_Sign(num);
-    if (sign >= 0) return num;
-    return ~num + 1;
+    int signMask = num >> 31;
+    return (num ^ signMask) + (1 & signMask);
 }
