@@ -13,6 +13,7 @@
 
 #ifndef m_matrix_h
 
+#define m_matrix_h
 #define m_matrix_h_M_Dot M_Dot
 #define m_matrix_h_M_Mult M_Mult
 #define m_matrix_h_M_ToRREF M_ToRREF

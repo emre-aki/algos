@@ -15,6 +15,7 @@
 
 #ifndef a_avl_h
 
+#define a_avl_h
 #define a_avl_h_AVL_Tree AVL_Tree
 #define a_avl_h_AVL_Node AVL_Node
 #define a_avl_h_AVL_InitTree AVL_InitTree

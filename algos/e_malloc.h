@@ -17,6 +17,7 @@
 
 #include "t_typedef.h"
 
+#define e_malloc_h
 #define e_malloc_h_E_Memblock E_Memblock
 #define e_malloc_h_E_Init E_Init
 #define e_malloc_h_E_Destroy E_Destroy

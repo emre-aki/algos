@@ -10,6 +10,7 @@
 
 #ifndef queue_h
 
+#define queue_h
 #define q_queue_h_qnode_t qnode_t
 #define q_queue_h_Q_Init Q_Init
 #define q_queue_h_Q_Push Q_Push

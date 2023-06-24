@@ -11,6 +11,7 @@
 
 #ifndef m_lookat_h
 
+#define m_lookat_h
 #define m_lookat_h_vec3_t vec3_t
 #define m_lookat_h_vec4_t vec4_t
 #define m_lookat_h_mat4_t mat4_t

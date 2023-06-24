@@ -10,6 +10,7 @@
 
 #ifndef d_disjointset_h
 
+#define d_disjointset_h
 #define d_disjointset_h_DS_Node DS_Node
 #define d_disjointset_h_DS_Init DS_Init
 #define d_disjointset_h_DS_Destroy DS_Destroy

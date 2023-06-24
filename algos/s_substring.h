@@ -13,6 +13,7 @@
 
 #ifndef s_substring_h
 
+#define s_substring_h
 #define s_substring_h_S_LongestSubstringWithEvenVowels
 #define s_substring_h_S_LongestSubstringWithNonRepeatingChars
 

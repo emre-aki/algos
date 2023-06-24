@@ -11,6 +11,7 @@
 
 #ifndef h_heap_h
 
+#define h_heap_h
 #define h_heap_h_HeapNode HeapNode
 #define h_heap_h_H_Heapify H_Heapify
 #define h_heap_h_H_HeapPop H_HeapPop

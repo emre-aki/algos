@@ -14,6 +14,7 @@
 
 #ifndef m_fixed_h
 
+#define m_fixed_h
 #define m_fixed_h_fixed_t fixed_t
 #define m_fixed_h_int64_t int64_t
 #define m_fixed_h_M_ToFixed M_ToFixed

@@ -10,6 +10,7 @@
 
 #ifndef t_typedef_h
 
+#define t_typedef_h
 #define t_typedef_h_byte byte
 
 typedef unsigned char byte;

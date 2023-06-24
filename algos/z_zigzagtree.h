@@ -10,6 +10,7 @@
 
 #ifndef zigzag_tree_h
 
+#define zigzag_tree_h
 #define z_zigzagtree_h_node_t node_t
 #define z_zigzagtree_h_tree_t tree_t
 #define z_zigzagtree_h_Z_Init Z_Init

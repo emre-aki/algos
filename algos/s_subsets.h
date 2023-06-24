@@ -11,6 +11,7 @@
 
 #ifndef s_subsets_h
 
+#define s_subsets_h
 #define s_subsets_h_S_Subsets S_Subsets
 #define s_subsets_h_S_TestSubsets S_TestSubsets
 
