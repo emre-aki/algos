@@ -21,6 +21,7 @@
 #include "s_subsets.h"
 #include "s_substring.h"
 #include "h_heap.h"
+#include "dl_dynlist.h"
 
 void TestDisjointSet (void)
 {
@@ -208,6 +209,20 @@ void TestHeap ()
     while (size > 0) printf("Popped %d\n", H_HeapPop(heap, &size).data);
 }
 
+void TestDynlist ()
+{
+    void* dynlist = DL_Alloc(1, sizeof(int));
+    for (int i = -50; i <= 50; ++i)
+    {
+        int* pushat = (int*) DL_Push(&dynlist);
+        *pushat = i;
+    }
+    while (DL_Length(dynlist))
+        printf("Popped %d\n", *((int*) DL_Pop(dynlist)));
+    DL_Print(dynlist);
+    DL_Free(dynlist);
+}
+
 int main (int argc, const char** argv)
 {
     E_Init(1);
@@ -220,6 +235,7 @@ int main (int argc, const char** argv)
     TestTree();
     E_Dump();
     TestSubsets();
+    TestDynlist();
     E_Destroy();
     TestSubstrings();
     TestHeap();
