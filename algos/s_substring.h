@@ -16,8 +16,10 @@
 #define s_substring_h
 #define s_substring_h_S_LongestSubstringWithEvenVowels S_LongestSubstringWithEvenVowels
 #define s_substring_h_S_LongestSubstringWithNonRepeatingChars S_LongestSubstringWithNonRepeatingChars
+#define s_substring_h_S_S_LongestCommonSubsequence S_LongestCommonSubsequence
 
 void S_LongestSubstringWithEvenVowels (char* str);
 void S_LongestSubstringWithNonRepeatingChars (char* str);
+void S_LongestCommonSubsequence (char* str0, char* str1);
 
 #endif

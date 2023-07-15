@@ -197,6 +197,8 @@ void TestSubstrings ()
     S_LongestSubstringWithEvenVowels("Hello, world!");
     S_LongestSubstringWithNonRepeatingChars("eleetminicoworoep");
     S_LongestSubstringWithNonRepeatingChars("Hello, world!");
+    S_LongestCommonSubsequence("weird", "eerie");
+    S_LongestCommonSubsequence("enamel", "annabelle");
 }
 
 void TestHeap ()
