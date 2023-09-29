@@ -38,24 +38,16 @@ static void S_PrintStr (char* str, int start, int end)
     printf("\n");
 }
 
-static void S_FlipBit (byte *b, byte i)
-{
-    byte front = *b >> i, rear = *b & ((1 << i) - 1);
-    front ^= 1;
-    front <<= i;
-    *b = front | rear;
-}
-
 byte S_VowelIndex (char vowel)
 {
     switch (vowel)
     {
-        case 'a': return 0;
-        case 'e': return 1;
-        case 'i': return 2;
-        case 'o': return 3;
-        case 'u': return 4;
-        default: return -1;
+        case 'a': return 0x2;
+        case 'e': return 0x4;
+        case 'i': return 0x8;
+        case 'o': return 0x10;
+        case 'u': return 0x20;
+        default: return 0;
     }
 }
 
@@ -63,13 +55,12 @@ void S_LongestSubstringWithEvenVowels (char* str)
 {
     int len = S_StrLen(str);
     byte evenMask = 0;
-    char memo[32] = { [0 ... 31] = -1 };
+    char memo[64] = { [0 ... 63] = -1 };
     int currlen = 0, maxlen = 0, start = 0;
     for (int i = 0; i < len; ++i)
     {
         char c = *(str + i);
-        char vowelIndex = S_VowelIndex(c);
-        if (vowelIndex >= 0) S_FlipBit(&evenMask, vowelIndex);
+        evenMask ^= S_VowelIndex(c);
         if (evenMask && *(memo + evenMask) < 0) *(memo + evenMask) = i;
         currlen = i - *(memo + evenMask);
         if (currlen >= maxlen)
