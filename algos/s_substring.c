@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 
+#include "s_substring.h"
 #include "t_typedef.h"
 #include "ar_arr2d.h"
 
