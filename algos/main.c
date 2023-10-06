@@ -22,6 +22,7 @@
 #include "s_substring.h"
 #include "h_heap.h"
 #include "dl_dynlist.h"
+#include "dp_dynprog.h"
 
 void TestDisjointSet (void)
 {
@@ -225,6 +226,13 @@ void TestDynlist ()
     DL_Free(dynlist);
 }
 
+void TestDynProg ()
+{
+    /* DP_MinDifficulty */
+    int jobs[6] = { 30, 10, 50, 40, 5 };
+    printf("{ 30, 10, 50, 40, 5 } DP_MinDifficulty: %d\n", DP_MinDifficulty(jobs, 5, 3));
+}
+
 int main (int argc, const char** argv)
 {
     E_Init(1);
@@ -241,5 +249,6 @@ int main (int argc, const char** argv)
     E_Destroy();
     TestSubstrings();
     TestHeap();
+    TestDynProg();
     return 0;
 }
