@@ -5,12 +5,13 @@
  *  Created by Emre Akı on 2023-02-26.
  *
  *  SYNOPSIS:
- *      A module that houses solutions for LeetCode problems #1371, #3,
- *      and #1143.
+ *      A module that houses solutions for some problems around substrings over
+ *      at LeetCode.
  *
  *         #1371: https://leetcode.com/problems/longest-substring-without-repeating-characters
  *         #3: https://leetcode.com/problems/find-the-longest-substring-containing-vowels-in-even-counts
  *         #1143: https://leetcode.com/problems/longest-common-subsequence
+ *         #5: https://leetcode.com/problems/longest-palindromic-substring
  */
 
 #include <stdio.h>
@@ -18,6 +19,7 @@
 #include "s_substring.h"
 #include "t_typedef.h"
 #include "ar_arr2d.h"
+#include "s_palind.h"
 
 #define MAX(a, b) (((a) >= (b)) ? (a) : (b))
 
@@ -141,4 +143,11 @@ void S_LongestCommonSubsequence (char* str0, char* str1)
         else --c;
     }
     printf("\"%s\"\n", res);
+}
+
+void S_LongestPalindromicSubstring (char* str)
+{
+    size_t strlen = S_StrLen(str), palindromestart;
+    size_t palindromelen = S_Manachers(str, strlen, &palindromestart);
+    S_PrintStr(str, palindromestart, palindromestart + palindromelen);
 }

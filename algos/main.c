@@ -200,6 +200,10 @@ void TestSubstrings ()
     S_LongestSubstringWithNonRepeatingChars("Hello, world!");
     S_LongestCommonSubsequence("weird", "eerie");
     S_LongestCommonSubsequence("enamel", "annabelle");
+    S_LongestPalindromicSubstring("racecar");
+    S_LongestPalindromicSubstring("abbaaba");
+    S_LongestPalindromicSubstring("reemaame");
+    S_LongestPalindromicSubstring("rotator");
 }
 
 void TestHeap ()
