@@ -23,6 +23,7 @@
 #include "h_heap.h"
 #include "dl_dynlist.h"
 #include "dp_dynprog.h"
+#include "sr_sort.h"
 
 void TestDisjointSet (void)
 {
@@ -237,6 +238,19 @@ void TestDynProg ()
     printf("{ 30, 10, 50, 40, 5 } DP_MinDifficulty: %d\n", DP_MinDifficulty(jobs, 5, 3));
 }
 
+void TestSort ()
+{
+    /* SR_Mergesort */
+    int input[5] = { 4, 0, 2, 1, 3 };
+    int sorted[5];
+
+    SR_Mergesort(input, sorted, 5);
+
+    printf("{ %d", *sorted);
+    for (size_t i = 1; i < 5; ++i) printf(", %d", *(sorted + i));
+    printf(" }\n");
+}
+
 int main (int argc, const char** argv)
 {
     E_Init(1);
@@ -254,5 +268,6 @@ int main (int argc, const char** argv)
     TestSubstrings();
     TestHeap();
     TestDynProg();
+    TestSort();
     return 0;
 }
