@@ -24,6 +24,7 @@
 #include "dl_dynlist.h"
 #include "dp_dynprog.h"
 #include "sr_sort.h"
+#include "s_buffer.h"
 
 void TestDisjointSet (void)
 {
@@ -251,6 +252,26 @@ void TestSort ()
     printf(" }\n");
 }
 
+void TestSBuffer ()
+{
+    E_Dump();
+
+    const byte A = 65;
+    sbuffer_t* sbuffer = SB_Init(10);
+
+    SB_Push(sbuffer, 4, 1, A);
+    SB_Push(sbuffer, 6, 1, A + 1);
+    SB_Push(sbuffer, 0, 9, A + 2);
+    SB_Push(sbuffer, 0, 1, A + 3);
+    SB_Push(sbuffer, 0, 10, A + 4);
+    SB_Push(sbuffer, 11, 12, A + 5);
+    SB_Dump(sbuffer);
+    SB_Print(sbuffer);
+    E_Dump();
+    SB_Destroy(sbuffer);
+    E_Dump();
+}
+
 int main (int argc, const char** argv)
 {
     E_Init(1);
@@ -264,6 +285,7 @@ int main (int argc, const char** argv)
     E_Dump();
     TestSubsets();
     TestDynlist();
+    TestSBuffer();
     E_Destroy();
     TestSubstrings();
     TestHeap();
