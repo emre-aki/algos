@@ -28,28 +28,30 @@ static sb_node_t* SB_Node (int start, int size, byte id)
 {
     sb_node_t* node = (sb_node_t*) E_Malloc(sizeof(sb_node_t), SB_Node);
 
-    node->start = start;
-    node->size = size;
     node->prev = 0;
     node->next = 0;
+    node->start = start;
+    node->size = size;
     node->id = id;
 
     return node;
 }
 
-sbuffer_t* SB_Init (int size)
+sbuffer_t* SB_Init (int size, size_t max_depth)
 {
     sbuffer_t* sbuffer = (sbuffer_t*) E_Malloc(sizeof(sbuffer_t), SB_Init);
 
     sbuffer->root = 0;
     sbuffer->size = size;
+    sbuffer->max_depth = max_depth;
 
     return sbuffer;
 }
 
+/* UNUSED: Recursive version 🤕 */
 static
 int
-_SB_Push
+_SB_Push_Rec
 ( sb_node_t* node,
   int start, int size,
   int left, int right,
@@ -69,11 +71,11 @@ _SB_Push
         /* previous subtree is occupied, continue searching for an empty slot */
         if (node->prev)
         {
-            remaining = _SB_Push(node->prev,
-                                 start, size,
-                                 prevleft, prevright,
-                                 id,
-                                 pushed);
+            remaining = _SB_Push_Rec(node->prev,
+                                     start, size,
+                                     prevleft, prevright,
+                                     id,
+                                     pushed);
         }
         /* found an empty slot */
         else
@@ -106,11 +108,11 @@ _SB_Push
             /* next subtree is occupied, continue searching for an empty slot */
             if (node->next)
             {
-                remaining = _SB_Push(node->next,
-                                     nextleft, stillremaining,
-                                     nextleft, nextright,
-                                     id,
-                                     pushed);
+                remaining = _SB_Push_Rec(node->next,
+                                         nextleft, stillremaining,
+                                         nextleft, nextright,
+                                         id,
+                                         pushed);
             }
             /* found an empty slot */
             else
@@ -140,11 +142,11 @@ _SB_Push
         /* next subtree is occupied, continue searching for an empty slot */
         if (node->next)
         {
-            remaining = _SB_Push(node->next,
-                                 start, size,
-                                 nextleft, nextright,
-                                 id,
-                                 pushed);
+            remaining = _SB_Push_Rec(node->next,
+                                     start, size,
+                                     nextleft, nextright,
+                                     id,
+                                     pushed);
         }
         /* found an empty slot */
         else
@@ -171,7 +173,8 @@ _SB_Push
     return remaining;
 }
 
-int SB_Push (sbuffer_t* sbuffer, int start, int size, byte id)
+/* UNUSED: Recursive version 🤕 */
+static int SB_Push_Rec (sbuffer_t* sbuffer, int start, int size, byte id)
 {
     /* the buffer is empty */
     if (!sbuffer->root)
@@ -197,7 +200,122 @@ int SB_Push (sbuffer_t* sbuffer, int start, int size, byte id)
     // of the segment into the buffer, or if the space the segment should be
     // inserted into has already completely occluded
     byte pushed = 0;
-    _SB_Push(sbuffer->root, start, size, 0, sbuffer->size, id, &pushed);
+    _SB_Push_Rec(sbuffer->root, start, size, 0, sbuffer->size, id, &pushed);
+
+    if (!pushed)
+    {
+        printf("[SB_Push_Rec] Cannot add more segments, spot fully occluded!\n");
+
+        return 1;
+    }
+
+    return 0;
+}
+
+typedef struct {
+    sb_node_t* node;
+    int        left, right;
+    byte       left_turn;
+} pscope_t;
+
+int SB_Push (sbuffer_t* sbuffer, int start, int size, byte id)
+{
+    sb_node_t* curr = sbuffer->root;
+
+    /* the buffer is empty — initialize the root and return immediately */
+    if (!curr)
+    {
+        // clip the segment from left
+        const int clipleft = MAX(-start, 0);
+        // ...and right
+        const int clipright = MAX(start + size - sbuffer->size, 0);
+        const int clipped_size = size - clipleft - clipright;
+
+        /* only insert if there's something left to insert */
+        if (clipped_size > 0)
+        {
+            sbuffer->root = SB_Node(start + clipleft, clipped_size, id);
+
+            return 0;
+        }
+
+        return 1;
+    }
+
+    int left = 0, right = sbuffer->size;
+    int offset = start, remaining = size;
+    byte pushed = 0;
+    /* initialize the push-stack to store the local scope for each "recursive"
+     * stride
+     */
+    pscope_t stack[sbuffer->max_depth];
+    size_t i = 0;
+
+    /* continue pushing in sub-segments unless there's nothing left to insert */
+    while (remaining > 0)
+    {
+        sb_node_t* parent;
+
+        /* try to find an available spot to insert */
+        while (curr)
+        {
+            if (i == sbuffer->max_depth)
+            {
+                printf("[SB_Push] Maximum buffer depth reached!\n");
+
+                return 1;
+            }
+
+            parent = curr;
+            pscope_t scope = { parent, left, right, 0 };
+            *(stack + i++) = scope;
+
+            if (offset < parent->start)
+            {
+                right = parent->start;
+                curr = parent->prev;
+                (stack + i - 1)->left_turn = 0xff;
+            }
+            else
+            {
+                left = parent->start + parent->size;
+                curr = parent->next;
+            }
+        }
+        /* we should have found an empty spot to insert by now */
+
+        // clip the current sub-segment from left
+        const int clipleft = MAX(left - offset, 0);
+        // ...and right
+        const int clipright = MAX(offset + remaining - right, 0);
+        const int clipped_size = remaining - clipleft - clipright;
+
+        /* only insert if there's something left to insert */
+        if (clipped_size > 0)
+        {
+            sb_node_t* new_node = SB_Node(offset + clipleft, clipped_size, id);
+            if (offset < parent->start) parent->prev = new_node;
+            else parent->next = new_node;
+            pushed = 0xff;
+        }
+
+        // keep popping off of the stack until we encounter a left turn,
+        // since only a left turn can potentially leave outstanding sub-segments
+        // yet to be inserted
+        while (i > 0 && !(stack + --i)->left_turn);
+        // if we've come back to root node with no left turns whatsoever, it's
+        // safe to break out of the loop
+        if (!(i || stack->left_turn)) break;
+
+        pscope_t prev_scope = *(stack + i);
+        curr = prev_scope.node;
+        left = prev_scope.left;
+        right = prev_scope.right;
+        offset = curr->start + curr->size;
+        // if we're clipping more than what's left over, that means there's
+        // nothing remaining
+        remaining = (clipright & ((clipright - remaining) >> 31)) - curr->size;
+    }
 
     if (!pushed)
     {

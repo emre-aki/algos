@@ -30,17 +30,18 @@
 #define s_buffer_h_SB_Destroy SB_Destroy
 
 typedef struct sb_node {
-    int             start, size;
     struct sb_node *prev, *next;
+    int             start, size;
     byte            id;
 } sb_node_t;
 
 typedef struct {
-    int        size;
     sb_node_t* root;
+    int        size;
+    size_t     max_depth;
 } sbuffer_t;
 
-sbuffer_t* SB_Init (int size);
+sbuffer_t* SB_Init (int size, size_t max_depth);
 int SB_Push (sbuffer_t* sbuffer, int start, int size, byte id);
 void SB_Dump (sbuffer_t* sbuffer);
 void SB_Print (sbuffer_t* sbuffer);

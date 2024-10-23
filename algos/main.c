@@ -257,14 +257,14 @@ void TestSBuffer ()
     E_Dump();
 
     const byte A = 65;
-    sbuffer_t* sbuffer = SB_Init(10);
+    sbuffer_t* sbuffer = SB_Init(6, 1024);
 
-    SB_Push(sbuffer, 4, 1, A);
-    SB_Push(sbuffer, 6, 1, A + 1);
-    SB_Push(sbuffer, 0, 9, A + 2);
-    SB_Push(sbuffer, 0, 1, A + 3);
-    SB_Push(sbuffer, 0, 10, A + 4);
-    SB_Push(sbuffer, 11, 12, A + 5);
+    SB_Push(sbuffer, 5, 1, A);
+    SB_Push(sbuffer, 1, 1, A + 1);
+    SB_Push(sbuffer, 3, 1, A + 2);
+    SB_Push(sbuffer, 3, 3, A + 3);
+    SB_Push(sbuffer, 3, 4, A + 4);
+    SB_Push(sbuffer, 0, 7, A + 5);
     SB_Dump(sbuffer);
     SB_Print(sbuffer);
     E_Dump();
