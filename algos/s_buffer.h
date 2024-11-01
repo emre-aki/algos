@@ -21,7 +21,7 @@
 #include "t_typedef.h"
 
 #define s_buffer_h
-#define s_buffer_h_sb_node_t sb_node_t
+#define s_buffer_h_span_t span_t
 #define s_buffer_h_sbuffer_t sbuffer_t
 #define s_buffer_h_SB_Init SB_Init
 #define s_buffer_h_SB_Push SB_Push
@@ -29,16 +29,16 @@
 #define s_buffer_h_SB_Print SB_Print
 #define s_buffer_h_SB_Destroy SB_Destroy
 
-typedef struct sb_node {
-    struct sb_node *prev, *next;
-    int             start, size;
-    byte            id;
-} sb_node_t;
+typedef struct span {
+    struct span *prev, *next;
+    int          start, size;
+    byte         id;
+} span_t;
 
 typedef struct {
-    sb_node_t* root;
-    int        size;
-    size_t     max_depth;
+    span_t* root;
+    int     size;
+    size_t  max_depth;
 } sbuffer_t;
 
 sbuffer_t* SB_Init (int size, size_t max_depth);

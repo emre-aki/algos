@@ -24,9 +24,9 @@
 
 #define MAX(a, b) ((((a) > (b)) * (a)) + (((b) >= (a)) * (b)))
 
-static sb_node_t* SB_Node (int start, int size, byte id)
+static span_t* SB_Span (int start, int size, byte id)
 {
-    sb_node_t* node = (sb_node_t*) E_Malloc(sizeof(sb_node_t), SB_Node);
+    span_t* node = (span_t*) E_Malloc(sizeof(span_t), SB_Span);
 
     node->prev = 0;
     node->next = 0;
@@ -52,7 +52,7 @@ sbuffer_t* SB_Init (int size, size_t max_depth)
 static
 int
 _SB_Push_Rec
-( sb_node_t* node,
+( span_t* node,
   int start, int size,
   int left, int right,
   byte id,
@@ -89,7 +89,7 @@ _SB_Push_Rec
             /* only insert if there's something left to insert */
             if (remaining > 0)
             {
-                node->prev = SB_Node(start + clipleft, remaining, id);
+                node->prev = SB_Span(start + clipleft, remaining, id);
                 // update the pointer to `pushed` because we've just pushed
                 // something into the buffer
                 *pushed = 0xff;
@@ -125,7 +125,7 @@ _SB_Push_Rec
 
                 if (stillremaining > 0)
                 {
-                    node->next = SB_Node(nextleft, stillremaining, id);
+                    node->next = SB_Span(nextleft, stillremaining, id);
                     // update the pointer to `pushed` because we've just pushed
                     // something into the buffer
                     *pushed = 0xff;
@@ -159,7 +159,7 @@ _SB_Push_Rec
 
             if (remaining > 0)
             {
-                node->next = SB_Node(start + clipleft, remaining, id);
+                node->next = SB_Span(start + clipleft, remaining, id);
                 // update the pointer to `pushed` because we've just pushed
                 // something into the buffer
                 *pushed = 0xff;
@@ -188,7 +188,7 @@ static int SB_Push_Rec (sbuffer_t* sbuffer, int start, int size, byte id)
         /* only insert if there's something left to insert */
         if (remaining > 0)
         {
-            sbuffer->root = SB_Node(start + clipleft, remaining, id);
+            sbuffer->root = SB_Span(start + clipleft, remaining, id);
 
             return 0;
         }
@@ -213,14 +213,14 @@ static int SB_Push_Rec (sbuffer_t* sbuffer, int start, int size, byte id)
 }
 
 typedef struct {
-    sb_node_t* node;
-    int        left, right;
-    byte       left_turn;
+    span_t* node;
+    int     left, right;
+    byte    left_turn;
 } pscope_t;
 
 int SB_Push (sbuffer_t* sbuffer, int start, int size, byte id)
 {
-    sb_node_t* curr = sbuffer->root;
+    span_t* curr = sbuffer->root;
 
     /* the buffer is empty — initialize the root and return immediately */
     if (!curr)
@@ -234,7 +234,7 @@ int SB_Push (sbuffer_t* sbuffer, int start, int size, byte id)
         /* only insert if there's something left to insert */
         if (clipped_size > 0)
         {
-            sbuffer->root = SB_Node(start + clipleft, clipped_size, id);
+            sbuffer->root = SB_Span(start + clipleft, clipped_size, id);
 
             return 0;
         }
@@ -254,7 +254,7 @@ int SB_Push (sbuffer_t* sbuffer, int start, int size, byte id)
     /* continue pushing in sub-segments unless there's nothing left to insert */
     while (remaining > 0)
     {
-        sb_node_t* parent;
+        span_t* parent;
 
         /* try to find an available spot to insert */
         while (curr)
@@ -293,7 +293,7 @@ int SB_Push (sbuffer_t* sbuffer, int start, int size, byte id)
         /* only insert if there's something left to insert */
         if (clipped_size > 0)
         {
-            sb_node_t* new_node = SB_Node(offset + clipleft, clipped_size, id);
+            span_t* new_node = SB_Span(offset + clipleft, clipped_size, id);
             if (offset < parent->start) parent->prev = new_node;
             else parent->next = new_node;
             pushed = 0xff;
@@ -327,7 +327,7 @@ int SB_Push (sbuffer_t* sbuffer, int start, int size, byte id)
     return 0;
 }
 
-static void _SB_Dump (sb_node_t* node, size_t depth)
+static void _SB_Dump (span_t* node, size_t depth)
 {
     printf("[%zu] (id=%c) %d + %d\n", depth, node->id, node->start, node->size);
     if (node->prev) _SB_Dump(node->prev, depth + 1);
@@ -336,7 +336,7 @@ static void _SB_Dump (sb_node_t* node, size_t depth)
 
 void SB_Dump (sbuffer_t* sbuffer)
 {
-    sb_node_t* root = sbuffer->root;
+    span_t* root = sbuffer->root;
     if (!root)
     {
         printf("[SB_Dump] Empty S-Buffer!\n");
@@ -347,7 +347,7 @@ void SB_Dump (sbuffer_t* sbuffer)
     _SB_Dump(root, 0);
 }
 
-static void _SB_Print (sb_node_t* node, byte* span)
+static void _SB_Print (span_t* node, byte* span)
 {
     int offset = node->start;
 
@@ -367,7 +367,7 @@ void SB_Print (sbuffer_t* sbuffer)
     printf("%s\n", span);
 }
 
-void _SB_Destroy (sb_node_t* node)
+void _SB_Destroy (span_t* node)
 {
     if (node->prev) _SB_Destroy(node->prev);
     if (node->next) _SB_Destroy(node->next);
