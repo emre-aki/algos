@@ -29,16 +29,16 @@
 #define s_buffer_h_SB_Print SB_Print
 #define s_buffer_h_SB_Destroy SB_Destroy
 
-typedef struct sb_node {
-    struct sb_node *prev, *next;
-    int             start, size;
-    byte            id;
-} sb_node_t;
+typedef struct span {
+    struct span *prev, *next;
+    int          start, size;
+    byte         id;
+} span_t;
 
 typedef struct {
-    sb_node_t* root;
-    int        size;
-    size_t     max_depth;
+    span_t* root;
+    int     size;
+    size_t  max_depth;
 } sbuffer_t;
 
 sbuffer_t* SB_Init (int size, size_t max_depth);
