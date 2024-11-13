@@ -10,7 +10,8 @@
  *      removal problem in software rendering.
  *
  *      The implementation uses a binary tree instead of a linked list to cut
- *      down on the search time.
+ *      down on the search time. It also supports self-balancing following each
+ *      insertion to keep the depth of the tree at a minimum.
  *
  *      Original FAQ by Paul Nettle:
  *      https://www.gamedev.net/articles/programming/graphics/s-buffer-faq-r668/
@@ -24,6 +25,13 @@
 
 #define MAX(a, b) ((((a) > (b)) * (a)) + (((b) >= (a)) * (b)))
 
+#define BF(n) (((n)->next ? ((n)->next->depth + 1) : 0) - \
+               ((n)->prev ? ((n)->prev->depth + 1) : 0))
+
+// FIXME: mitigate the `MAX` usage here
+#define DEP(n) (MAX((n)->prev ? ((n)->prev->depth + 1) : 0, \
+                    (n)->next ? ((n)->next->depth + 1) : 0))
+
 static span_t* SB_Span (int start, int size, byte id)
 {
     span_t* node = (span_t*) E_Malloc(sizeof(span_t), SB_Span);
@@ -32,6 +40,7 @@ static span_t* SB_Span (int start, int size, byte id)
     node->next = 0;
     node->start = start;
     node->size = size;
+    node->depth = 0;
     node->id = id;
 
     return node;
@@ -215,7 +224,6 @@ static int SB_Push_Rec (sbuffer_t* sbuffer, int start, int size, byte id)
 typedef struct {
     span_t* node;
     int     left, right;
-    byte    left_turn;
 } pscope_t;
 
 int SB_Push (sbuffer_t* sbuffer, int start, int size, byte id)
@@ -242,14 +250,16 @@ int SB_Push (sbuffer_t* sbuffer, int start, int size, byte id)
         return 1;
     }
 
+    // left and right boundaries of insertion
     int left = 0, right = sbuffer->size;
+    // where the insertion starts, and how wide the remaining segment is
     int offset = start, remaining = size;
-    byte pushed = 0;
+    byte pushed = 0; // whether we were able push to anything
     /* initialize the push-stack to store the local scope for each "recursive"
      * stride
      */
     pscope_t stack[sbuffer->max_depth];
-    size_t i = 0;
+    int depth = 0; // stack pointer: how deep into the tree we currently are
 
     /* continue pushing in sub-segments unless there's nothing left to insert */
     while (remaining > 0)
@@ -259,7 +269,7 @@ int SB_Push (sbuffer_t* sbuffer, int start, int size, byte id)
         /* try to find an available spot to insert */
         while (curr)
         {
-            if (i == sbuffer->max_depth)
+            if (depth == sbuffer->max_depth)
             {
                 printf("[SB_Push] Maximum buffer depth reached!\n");
 
@@ -267,14 +277,13 @@ int SB_Push (sbuffer_t* sbuffer, int start, int size, byte id)
             }
 
             parent = curr;
-            pscope_t scope = { parent, left, right, 0 };
-            *(stack + i++) = scope;
+            pscope_t scope = { parent, left, right };
+            *(stack + depth++) = scope;
 
             if (offset < parent->start)
             {
                 right = parent->start;
                 curr = parent->prev;
-                (stack + i - 1)->left_turn = 0xff;
             }
             else
             {
@@ -293,28 +302,211 @@ int SB_Push (sbuffer_t* sbuffer, int start, int size, byte id)
         /* only insert if there's something left to insert */
         if (clipped_size > 0)
         {
-            span_t* new_node = SB_Span(offset + clipleft, clipped_size, id);
-            if (offset < parent->start) parent->prev = new_node;
-            else parent->next = new_node;
+            curr = SB_Span(offset + clipleft, clipped_size, id);
+            if (offset < parent->start) parent->prev = curr;
+            else parent->next = curr;
             pushed = 0xff;
         }
 
-        // keep popping off of the stack until we encounter a left turn,
-        // since only a left turn can potentially leave outstanding sub-segments
-        // yet to be inserted
-        while (i > 0 && !(stack + --i)->left_turn);
-        // if we've come back to root node with no left turns whatsoever, it's
-        // safe to break out of the loop
-        if (!(i || stack->left_turn)) break;
+        // where to continue inserting should there be any remaining
+        // sub-segments
+        int insertion_bookmark = -1;
+        // where the imbalance occurred, if one did occur
+        int imbalance_bookmark = -1;
+        // temporary stack pointer to walk back up the stack
+        int stack_depth = depth - 1;
+        // temporary offset to determine whether there had been a left turn
+        // while walking back up the stack
+        int tmp_start = offset;
 
-        pscope_t prev_scope = *(stack + i);
-        curr = prev_scope.node;
-        left = prev_scope.left;
-        right = prev_scope.right;
-        offset = curr->start + curr->size;
-        // if we're clipping more than what's left over, that means there's
-        // nothing remaining
-        remaining = (clipright & ((clipright - remaining) >> 31)) - curr->size;
+        /* trace the insertion stack back in reverse to see if we need to
+         * continue inserting remaining segments, or if we need to re-balance
+         * the buffer...
+         */
+        for (size_t i = 0; i < depth; ++i)
+        {
+            /* ...until we've found both a left turn and an imbalanced node */
+            if (!(insertion_bookmark < 0 || (curr && imbalance_bookmark < 0)))
+                break;
+
+            pscope_t scope = *(stack + stack_depth);
+            span_t* parent_node = scope.node;
+
+            /* remember "where we left off" for the next iteration:
+             * we only care about left turns, as they are the ones that can
+             * potentially leave outstanding sub-segments yet to be inserted
+             */
+            if (insertion_bookmark < 0 && tmp_start < parent_node->start)
+                insertion_bookmark = stack_depth;
+            tmp_start = parent_node->start;
+
+            if (imbalance_bookmark < 0 && curr)
+            {
+                const int balance_factor = BF(parent_node);
+                /* remember where the imbalance occurred, if there happened to
+                 * be one...
+                 */
+                if (balance_factor < -1 || balance_factor > 1)
+                    imbalance_bookmark = stack_depth;
+                /* ...otherwise, update the depth of this node */
+                else
+                    /* FIXME: there might not be a need to use `MAX` here due to
+                     * the intrinsic nature of how AVL trees grow, i.e.,
+                     * `depth - stack_depth` should always be greater than or
+                     * equal to `node->depth`
+                     */
+                    parent_node->depth = MAX(parent_node->depth,
+                                             depth - stack_depth);
+            }
+
+            --stack_depth;
+        }
+
+        /* update the scope parameters if we are to continue inserting */
+        if (insertion_bookmark >= 0)
+        {
+            pscope_t scope = *(stack + insertion_bookmark);
+            curr = scope.node;
+            left = scope.left;
+            right = scope.right;
+            offset = curr->start + curr->size;
+            // there's an outstanding sub-segment of size `clipright` waiting to
+            // be inserted — try to insert it to the right of the current node
+            remaining = clipright - curr->size;
+            // adjust the stack pointer for the next iteration
+            depth = insertion_bookmark;
+        }
+        /* if not, then we're free to exit */
+        else
+        {
+            remaining = 0;
+        }
+
+        /* lo and behold: *the* balancing, at long last!
+         * let's balance the crap out of this buffer, shall we?
+         * here goes nothing...
+         */
+        if (imbalance_bookmark >= 0)
+        {
+            /* remember the parent of where the imbalance started, you're gonna
+             * need it later
+             */
+            span_t* imbalance_parent = 0;
+            if (imbalance_bookmark)
+                imbalance_parent = (stack + imbalance_bookmark - 1)->node;
+
+            span_t* old_parent = (stack + imbalance_bookmark)->node;
+            span_t *child, *new_parent;
+
+            /* restore balance in the `prev` sub-tree */
+            if (BF(old_parent) < 0)
+            {
+                new_parent = old_parent->prev;
+                child = new_parent->prev;
+
+                if (BF(new_parent) > 0) // need to do a double-rotation
+                {
+                    child = new_parent;
+                    new_parent = child->next;
+                    child->next = new_parent->prev;
+                    new_parent->prev = child;
+                    old_parent->prev = new_parent;
+                }
+
+                old_parent->prev = new_parent->next;
+                new_parent->next = old_parent;
+            }
+            /* restore balance in the `next` sub-tree */
+            else
+            {
+                new_parent = old_parent->next;
+                child = new_parent->next;
+
+                if (BF(new_parent) < 0) // need to do a double-rotation
+                {
+                    child = new_parent;
+                    new_parent = child->prev;
+                    child->prev = new_parent->next;
+                    new_parent->next = child;
+                    old_parent->next = new_parent;
+                }
+
+                old_parent->next = new_parent->prev;
+                new_parent->prev = old_parent;
+            }
+
+            /* update the depths after balancing */
+            old_parent->depth = DEP(old_parent);
+            child->depth = DEP(child);
+            new_parent->depth = DEP(new_parent);
+
+            /* update the parent of the newly balanced node */
+            if (imbalance_parent)
+            {
+                if (new_parent->start < imbalance_parent->start)
+                    imbalance_parent->prev = new_parent;
+                else
+                    imbalance_parent->next = new_parent;
+            }
+            /* if there is no parent, it means we just balanced the root node,
+             * so update its reference
+             */
+            else
+            {
+                sbuffer->root = new_parent;
+            }
+
+            /* re-construct the stack after having balanced the buffer, only if
+             * the balancing had occurred higher up the stack than where we
+             * should continue inserting from
+             */
+            if (imbalance_bookmark <= insertion_bookmark)
+            {
+                int i = imbalance_bookmark;
+                int new_left = 0, new_right = sbuffer->size;
+
+                /* re-adjust the initial `left` and `right` boundaries unless
+                 * the imbalance occurred at the root
+                 */
+                if (i)
+                {
+                    const pscope_t* scope = stack + i - 1;
+                    const span_t* parent_node = scope->node;
+                    new_left = scope->left;
+                    new_right = scope->right;
+
+                    if (new_parent->start < parent_node->start)
+                        new_right = parent_node->start;
+                    else
+                        new_left = parent_node->start + parent_node->size;
+                }
+
+                for (span_t* stack_node = new_parent; stack_node; ++i)
+                {
+                    pscope_t scope = { stack_node, new_left, new_right };
+                    *(stack + i) = scope;
+
+                    // we've reached the "insertion bookmark", the
+                    // re-construction of the stack is complete
+                    if (stack_node->id == curr->id) break;
+
+                    if (offset < stack_node->start)
+                    {
+                        new_right = stack_node->start;
+                        stack_node = stack_node->prev;
+                    }
+                    else
+                    {
+                        new_left = stack_node->start + stack_node->size;
+                        stack_node = stack_node->next;
+                    }
+                }
+
+                left = new_left;   // update the `left`...
+                right = new_right; // ...and the `right` boundaries
+                depth = i; // adjust the stack pointer for the next iteration
+            }
+        }
     }
 
     if (!pushed)

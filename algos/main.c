@@ -265,6 +265,9 @@ void TestSBuffer ()
     SB_Push(sbuffer, 3, 3, A + 3);
     SB_Push(sbuffer, 3, 4, A + 4);
     SB_Push(sbuffer, 0, 7, A + 5);
+    SB_Push(sbuffer, 3, 1, A + 6);
+    SB_Push(sbuffer, 0, 3, A + 7);
+    SB_Push(sbuffer, 0, 5, A + 8);
     SB_Dump(sbuffer);
     SB_Print(sbuffer);
     E_Dump();

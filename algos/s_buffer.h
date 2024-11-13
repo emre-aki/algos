@@ -32,6 +32,7 @@
 typedef struct span {
     struct span *prev, *next;
     int          start, size;
+    int          depth;
     byte         id;
 } span_t;
 
