@@ -329,7 +329,9 @@ int SB_Push (sbuffer_t* sbuffer, int start, int size, byte id)
 
 static void _SB_Dump (span_t* node, size_t depth)
 {
-    printf("[%zu] (id=%c) %d + %d\n", depth, node->id, node->start, node->size);
+    size_t indent = depth << 2;
+    for (size_t i = 0; i < indent; ++i) printf(" ");
+    printf("[%c] %d + %d\n", node->id, node->start, node->size);
     if (node->prev) _SB_Dump(node->prev, depth + 1);
     if (node->next) _SB_Dump(node->next, depth + 1);
 }
