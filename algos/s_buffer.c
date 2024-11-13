@@ -367,15 +367,45 @@ void SB_Print (sbuffer_t* sbuffer)
     printf("%s\n", span);
 }
 
-void _SB_Destroy (span_t* node)
-{
-    if (node->prev) _SB_Destroy(node->prev);
-    if (node->next) _SB_Destroy(node->next);
-    E_Free(node);
-}
-
 void SB_Destroy (sbuffer_t* sbuffer)
 {
-    if (sbuffer->root) _SB_Destroy(sbuffer->root);
+    span_t *curr = sbuffer->root, *parent;
+    span_t* stack[sbuffer->max_depth];
+    size_t i = 0;
+
+    while (curr)
+    {
+        while (curr)
+        {
+            parent = curr;
+            *(stack + i++) = parent;
+            curr = parent->prev;
+        }
+        /* `prev` sub-trees have been exhausted at this point */
+
+        curr = parent->next; // try the `next` sub-tree
+
+        /* no `prev` or `next` sub-trees mean we're on a leaf node, go ahead and
+         * free it
+         */
+        if (!curr)
+        {
+            span_t* grandparent = 0;
+
+            if (--i > 0)
+            {
+                grandparent = *(stack + --i);
+                /* remove the link from the grandparent to the parent, so we
+                 * won't end up back here going back up the stack
+                 */
+                if (parent->start < grandparent->start) grandparent->prev = 0;
+                else grandparent->next = 0;
+            }
+
+            E_Free(parent);
+            curr = grandparent; // continue freeing from the grandparent
+        }
+    }
+
     E_Free(sbuffer);
 }
