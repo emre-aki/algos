@@ -31,7 +31,7 @@
 
 typedef struct span {
     struct span *prev, *next;
-    int          start, size;
+    int          x0,    x1;
     int          depth;
     byte         id;
 } span_t;
@@ -43,7 +43,7 @@ typedef struct {
 } sbuffer_t;
 
 sbuffer_t* SB_Init (int size, size_t max_depth);
-int SB_Push (sbuffer_t* sbuffer, int start, int size, byte id);
+int SB_Push (sbuffer_t* sbuffer, int x0, int x1, byte id);
 void SB_Dump (sbuffer_t* sbuffer);
 void SB_Print (sbuffer_t* sbuffer);
 void SB_Destroy (sbuffer_t* sbuffer);
