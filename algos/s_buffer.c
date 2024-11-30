@@ -308,10 +308,10 @@ int SB_Push (sbuffer_t* sbuffer, int x0, int x1, byte id)
                  */
                 if (i)
                 {
-                    const pscope_t* scope = stack + i - 1;
-                    const span_t* parent_span = scope->span;
-                    new_left = scope->left;
-                    new_right = scope->right;
+                    const pscope_t parent_scope = *(stack + i - 1);
+                    const span_t* parent_span = parent_scope.span;
+                    new_left = parent_scope.left;
+                    new_right = parent_scope.right;
 
                     if (new_parent->x0 < parent_span->x0)
                         new_right = parent_span->x0;
@@ -326,7 +326,7 @@ int SB_Push (sbuffer_t* sbuffer, int x0, int x1, byte id)
 
                     // we've reached the "insertion bookmark", the
                     // re-construction of the stack is complete
-                    if (stack_span->id == curr->id) break;
+                    if (stack_span == curr) break;
 
                     if (x < stack_span->x0)
                     {
