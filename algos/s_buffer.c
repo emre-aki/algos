@@ -236,7 +236,7 @@ int SB_Push (sbuffer_t* sbuffer, int x0, int x1, byte id)
                 imbalance_parent = (stack + imbalance_bookmark - 1)->span;
 
             span_t* old_parent = (stack + imbalance_bookmark)->span;
-            span_t *child, *new_parent;
+            span_t *new_parent, *child;
 
             /* restore balance in the `prev` sub-tree */
             if (BF(old_parent) < 0)
@@ -250,7 +250,6 @@ int SB_Push (sbuffer_t* sbuffer, int x0, int x1, byte id)
                     new_parent = child->next;
                     child->next = new_parent->prev;
                     new_parent->prev = child;
-                    old_parent->prev = new_parent;
                 }
 
                 old_parent->prev = new_parent->next;
@@ -268,7 +267,6 @@ int SB_Push (sbuffer_t* sbuffer, int x0, int x1, byte id)
                     new_parent = child->prev;
                     child->prev = new_parent->next;
                     new_parent->next = child;
-                    old_parent->next = new_parent;
                 }
 
                 old_parent->next = new_parent->prev;
