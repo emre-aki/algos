@@ -34,16 +34,16 @@
 
 static span_t* SB_Span (int x0, int x1, byte id)
 {
-    span_t* node = (span_t*) E_Malloc(sizeof(span_t), SB_Span);
+    span_t* span = (span_t*) E_Malloc(sizeof(span_t), SB_Span);
 
-    node->prev = 0;
-    node->next = 0;
-    node->x0 = x0;
-    node->x1 = x1;
-    node->depth = 0;
-    node->id = id;
+    span->prev = 0;
+    span->next = 0;
+    span->x0 = x0;
+    span->x1 = x1;
+    span->depth = 0;
+    span->id = id;
 
-    return node;
+    return span;
 }
 
 sbuffer_t* SB_Init (int size, size_t max_depth)
@@ -58,7 +58,7 @@ sbuffer_t* SB_Init (int size, size_t max_depth)
 }
 
 typedef struct {
-    span_t* node;
+    span_t* span;
     int     left, right;
 } pscope_t;
 
@@ -164,37 +164,38 @@ int SB_Push (sbuffer_t* sbuffer, int x0, int x1, byte id)
          */
         for (size_t i = 0; i < depth; ++i)
         {
-            /* ...until we've found both a left turn and an imbalanced node */
+            /* ...until we've found both a left turn and an imbalanced
+             * subtree
+             */
             if (!(insertion_bookmark < 0 || (curr && imbalance_bookmark < 0)))
                 break;
 
-            pscope_t scope = *(stack + stack_depth);
-            span_t* parent_node = scope.node;
+            span_t* parent_span = (stack + stack_depth)->span;
 
             /* remember "where we left off" for the next iteration:
              * we only care about left turns, as they are the ones that can
              * potentially leave outstanding sub-segments yet to be inserted
              */
-            if (insertion_bookmark < 0 && tmp_x < parent_node->x0)
+            if (insertion_bookmark < 0 && tmp_x < parent_span->x0)
                 insertion_bookmark = stack_depth;
-            tmp_x = parent_node->x0;
+            tmp_x = parent_span->x0;
 
             if (imbalance_bookmark < 0 && curr)
             {
-                const int balance_factor = BF(parent_node);
+                const int balance_factor = BF(parent_span);
                 /* remember where the imbalance occurred, if there happened to
                  * be one...
                  */
                 if (balance_factor < -1 || balance_factor > 1)
                     imbalance_bookmark = stack_depth;
-                /* ...otherwise, update the depth of this node */
+                /* ...otherwise, update the depth of this span */
                 else
                     /* FIXME: there might not be a need to use `MAX` here due to
                      * the intrinsic nature of how AVL trees grow, i.e.,
                      * `depth - stack_depth` should always be greater than or
-                     * equal to `node->depth`
+                     * equal to `span->depth`
                      */
-                    parent_node->depth = MAX(parent_node->depth,
+                    parent_span->depth = MAX(parent_span->depth,
                                              depth - stack_depth);
             }
 
@@ -205,12 +206,12 @@ int SB_Push (sbuffer_t* sbuffer, int x0, int x1, byte id)
         if (insertion_bookmark >= 0)
         {
             pscope_t scope = *(stack + insertion_bookmark);
-            curr = scope.node;
+            curr = scope.span;
             left = scope.left;
             right = scope.right;
             x = curr->x1;
             // there's an outstanding sub-segment of size `clipright` waiting to
-            // be inserted — try to insert it to the right of the current node
+            // be inserted — try to insert it to the right of the current span
             remaining = clipright + curr->x0 - curr->x1;
             // adjust the stack pointer for the next iteration
             depth = insertion_bookmark;
@@ -232,9 +233,9 @@ int SB_Push (sbuffer_t* sbuffer, int x0, int x1, byte id)
              */
             span_t* imbalance_parent = 0;
             if (imbalance_bookmark)
-                imbalance_parent = (stack + imbalance_bookmark - 1)->node;
+                imbalance_parent = (stack + imbalance_bookmark - 1)->span;
 
-            span_t* old_parent = (stack + imbalance_bookmark)->node;
+            span_t* old_parent = (stack + imbalance_bookmark)->span;
             span_t *child, *new_parent;
 
             /* restore balance in the `prev` sub-tree */
@@ -279,7 +280,7 @@ int SB_Push (sbuffer_t* sbuffer, int x0, int x1, byte id)
             child->depth = DEP(child);
             new_parent->depth = DEP(new_parent);
 
-            /* update the parent of the newly balanced node */
+            /* update the parent of the newly balanced span */
             if (imbalance_parent)
             {
                 if (new_parent->x0 < imbalance_parent->x0)
@@ -287,7 +288,7 @@ int SB_Push (sbuffer_t* sbuffer, int x0, int x1, byte id)
                 else
                     imbalance_parent->next = new_parent;
             }
-            /* if there is no parent, it means we just balanced the root node,
+            /* if there is no parent, it means we just balanced the root span,
              * so update its reference
              */
             else
@@ -310,34 +311,34 @@ int SB_Push (sbuffer_t* sbuffer, int x0, int x1, byte id)
                 if (i)
                 {
                     const pscope_t* scope = stack + i - 1;
-                    const span_t* parent_node = scope->node;
+                    const span_t* parent_span = scope->span;
                     new_left = scope->left;
                     new_right = scope->right;
 
-                    if (new_parent->x0 < parent_node->x0)
-                        new_right = parent_node->x0;
+                    if (new_parent->x0 < parent_span->x0)
+                        new_right = parent_span->x0;
                     else
-                        new_left = parent_node->x1;
+                        new_left = parent_span->x1;
                 }
 
-                for (span_t* stack_node = new_parent; stack_node; ++i)
+                for (span_t* stack_span = new_parent; stack_span; ++i)
                 {
-                    pscope_t scope = { stack_node, new_left, new_right };
+                    pscope_t scope = { stack_span, new_left, new_right };
                     *(stack + i) = scope;
 
                     // we've reached the "insertion bookmark", the
                     // re-construction of the stack is complete
-                    if (stack_node->id == curr->id) break;
+                    if (stack_span->id == curr->id) break;
 
-                    if (x < stack_node->x0)
+                    if (x < stack_span->x0)
                     {
-                        new_right = stack_node->x0;
-                        stack_node = stack_node->prev;
+                        new_right = stack_span->x0;
+                        stack_span = stack_span->prev;
                     }
                     else
                     {
-                        new_left = stack_node->x1;
-                        stack_node = stack_node->next;
+                        new_left = stack_span->x1;
+                        stack_span = stack_span->next;
                     }
                 }
 
@@ -358,13 +359,13 @@ int SB_Push (sbuffer_t* sbuffer, int x0, int x1, byte id)
     return 0;
 }
 
-static void _SB_Dump (span_t* node, size_t depth)
+static void _SB_Dump (span_t* span, size_t depth)
 {
     size_t indent = depth << 2;
     for (size_t i = 0; i < indent; ++i) printf(" ");
-    printf("[%c] %d + %d\n", node->id, node->x0, node->x1 - node->x0);
-    if (node->prev) _SB_Dump(node->prev, depth + 1);
-    if (node->next) _SB_Dump(node->next, depth + 1);
+    printf("[%c] %d + %d\n", span->id, span->x0, span->x1 - span->x0);
+    if (span->prev) _SB_Dump(span->prev, depth + 1);
+    if (span->next) _SB_Dump(span->next, depth + 1);
 }
 
 void SB_Dump (sbuffer_t* sbuffer)
@@ -380,25 +381,25 @@ void SB_Dump (sbuffer_t* sbuffer)
     _SB_Dump(root, 0);
 }
 
-static void _SB_Print (span_t* node, byte* span)
+static void _SB_Print (span_t* span, byte* buffer)
 {
-    const int size = node->x1 - node->x0;
-    int offset = node->x0;
+    const int span_size = span->x1 - span->x0;
+    int x = span->x0;
 
-    for (int i = 0; i < size; ++i) *(span + offset++) = node->id;
-    if (node->prev) _SB_Print(node->prev, span);
-    if (node->next) _SB_Print(node->next, span);
+    for (int i = 0; i < span_size; ++i) *(buffer + x++) = span->id;
+    if (span->prev) _SB_Print(span->prev, buffer);
+    if (span->next) _SB_Print(span->next, buffer);
 }
 
 void SB_Print (sbuffer_t* sbuffer)
 {
-    int spansize = sbuffer->size;
-    byte span[spansize + 1];
+    int buffer_size = sbuffer->size;
+    byte buffer[buffer_size + 1];
 
-    *(span + spansize) = 0;
-    for (int i = 0; i < spansize; ++i) *(span + i) = '_';
-    if (sbuffer->root) _SB_Print(sbuffer->root, span);
-    printf("%s\n", span);
+    *(buffer + buffer_size) = 0;
+    for (int i = 0; i < buffer_size; ++i) *(buffer + i) = '_';
+    if (sbuffer->root) _SB_Print(sbuffer->root, buffer);
+    printf("%s\n", buffer);
 }
 
 void SB_Destroy (sbuffer_t* sbuffer)
@@ -419,7 +420,7 @@ void SB_Destroy (sbuffer_t* sbuffer)
 
         curr = parent->next; // try the `next` sub-tree
 
-        /* no `prev` or `next` sub-trees mean we're on a leaf node, go ahead and
+        /* no `prev` or `next` sub-trees mean we're on a leaf span, go ahead and
          * free it
          */
         if (!curr)
